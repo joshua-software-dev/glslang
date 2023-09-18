@@ -37,8 +37,11 @@
 
 #include "../glslang/OSDependent/osinclude.h"
 #include <list>
-#include <mutex>
 #include <string>
+
+#if !defined(GLSLANG_SINGLE_THREADED)
+#include <mutex>
+#endif
 
 namespace glslang {
 
@@ -59,13 +62,17 @@ namespace glslang {
 
         void add(TWorkItem* item)
         {
+#if !defined(GLSLANG_SINGLE_THREADED)
             std::lock_guard<std::mutex> guard(mutex);
+#endif
             worklist.push_back(item);
         }
 
         bool remove(TWorkItem*& item)
         {
+#if !defined(GLSLANG_SINGLE_THREADED)
             std::lock_guard<std::mutex> guard(mutex);
+#endif
 
             if (worklist.empty())
                 return false;
@@ -86,7 +93,9 @@ namespace glslang {
         }
 
     protected:
+#if !defined(GLSLANG_SINGLE_THREADED)
         std::mutex mutex;
+#endif
         std::list<TWorkItem*> worklist;
     };
 

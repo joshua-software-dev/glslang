@@ -58,8 +58,11 @@
 #include <array>
 #include <map>
 #include <memory>
-#include <thread>
 #include <set>
+
+#if !defined(GLSLANG_SINGLE_THREADED)
+#include <thread>
+#endif
 
 #include "../glslang/OSDependent/osinclude.h"
 
@@ -1033,8 +1036,12 @@ void ProcessArguments(std::vector<std::unique_ptr<glslang::TWorkItem>>& workItem
                 Options |= EOptionSuppressInfolog;
                 break;
             case 't':
+#if !defined(GLSLANG_SINGLE_THREADED)
+                Error("Multithreading support was disabled at compile time.");
+#else
                 Options |= EOptionMultiThreaded;
                 break;
+#endif
             case 'v':
                 Options |= EOptionDumpVersions;
                 break;
@@ -1682,6 +1689,7 @@ int singleMain()
 
         bool printShaderNames = workList.size() > 1;
 
+#if !defined(GLSLANG_SINGLE_THREADED)
         if (Options & EOptionMultiThreaded) {
             std::array<std::thread, 16> threads;
             for (unsigned int t = 0; t < threads.size(); ++t) {
@@ -1694,6 +1702,7 @@ int singleMain()
 
             std::for_each(threads.begin(), threads.end(), [](std::thread& t) { t.join(); });
         } else
+#endif
             CompileShaders(workList);
 
         // Print out all the resulting infologs

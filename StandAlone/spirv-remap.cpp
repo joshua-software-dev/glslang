@@ -37,7 +37,10 @@
 #include <fstream>
 #include <cstring>
 #include <stdexcept>
+
+#if !defined(__wasi__)
 #include <filesystem>
+#endif
 
 //
 // Include remapper
@@ -386,7 +389,11 @@ int main(int argc, char** argv)
 
     const bool isMultiInput      = inputFiles.size() > 1;
     const bool isMultiOutput     = outputDirOrFiles.size() > 1;
+#if defined(__wasi__)
+    const bool isSingleOutputDir = !isMultiOutput;
+#else
     const bool isSingleOutputDir = !isMultiOutput && std::filesystem::is_directory(outputDirOrFiles[0]);
+#endif
 
     if (isMultiInput && !isMultiOutput && !isSingleOutputDir)
         usage(argv[0], "Output is not a directory.");

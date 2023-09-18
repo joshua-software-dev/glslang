@@ -38,11 +38,18 @@
 namespace glslang {
 
 namespace {
-thread_local TPoolAllocator* threadPoolAllocator = nullptr;
+
+#if !defined(GLSLANG_SINGLE_THREADED)
+thread_local
+#endif
+TPoolAllocator* threadPoolAllocator = nullptr;
 
 TPoolAllocator* GetDefaultThreadPoolAllocator()
 {
-    thread_local TPoolAllocator defaultAllocator;
+#if !defined(GLSLANG_SINGLE_THREADED)
+    thread_local
+#endif
+    TPoolAllocator defaultAllocator;
     return &defaultAllocator;
 }
 } // anonymous namespace

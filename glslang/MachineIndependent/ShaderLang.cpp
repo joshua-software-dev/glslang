@@ -45,11 +45,14 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
-#include <mutex>
 #include "SymbolTable.h"
 #include "ParseHelper.h"
 #include "Scan.h"
 #include "ScanContext.h"
+
+#if !defined(GLSLANG_SINGLE_THREADED)
+#include <mutex>
+#endif
 
 #ifdef ENABLE_HLSL
 #include "../HLSL/hlslParseHelper.h"
@@ -83,7 +86,9 @@ namespace { // anonymous namespace for file-local functions and symbols
 int NumberOfClients = 0;
 
 // global initialization lock
+#if !defined(GLSLANG_SINGLE_THREADED)
 std::mutex init_lock;
+#endif
 
 using namespace glslang;
 
@@ -420,8 +425,10 @@ void SetupBuiltinSymbolTable(int version, EProfile profile, const SpvVersion& sp
 {
     TInfoSink infoSink;
 
+#if !defined(GLSLANG_SINGLE_THREADED)
     // Make sure only one thread tries to do this at a time
     const std::lock_guard<std::mutex> lock(init_lock);
+#endif
 
     // See if it's already been done for this version/profile combination
     int versionIndex = MapVersionToIndex(version);
@@ -1299,7 +1306,9 @@ int ShInitialize()
     if (! InitProcess())
         return 0;
 
+#if !defined(GLSLANG_SINGLE_THREADED)
     const std::lock_guard<std::mutex> lock(init_lock);
+#endif
     ++NumberOfClients;
 
     if (PerProcessGPA == nullptr)
@@ -1368,7 +1377,9 @@ void ShDestruct(ShHandle handle)
 //
 int ShFinalize()
 {
+#if !defined(GLSLANG_SINGLE_THREADED)
     const std::lock_guard<std::mutex> lock(init_lock);
+#endif
     --NumberOfClients;
     assert(NumberOfClients >= 0);
     if (NumberOfClients > 0)
@@ -1504,7 +1515,7 @@ int ShLinkExt(
 
     if (linker == nullptr)
         return 0;
-    
+
     SetThreadPoolAllocator(linker->getPool());
     linker->infoSink.info.erase();
 

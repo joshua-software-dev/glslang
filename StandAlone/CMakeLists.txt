@@ -66,6 +66,12 @@ elseif(UNIX)
     endif()
 endif()
 
+if (WASI)
+    set_target_properties(glslang-standalone PROPERTIES
+        OUTPUT_NAME "glslang"
+        SUFFIX ".wasm")
+endif()
+
 target_link_libraries(glslang-standalone ${LIBRARIES})
 target_include_directories(glslang-standalone PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../External>
